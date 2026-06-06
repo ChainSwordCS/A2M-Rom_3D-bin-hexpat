@@ -20,14 +20,19 @@ struct block_lz_midi {
 struct unk_struct_1 {
     u32 var1; // pointer(????) to something idk
     //u32 var1 @ var1_ptr;
-    u32 block_ptr;
-    Type type;
-    u32 delta_x2; // block_len_x2
     
-    match (type) {
-        (Type::LZ_MIDI): block_lz_midi block @ block_ptr;
-        (_): u32 block_placeholder @ block_ptr;
+    try {
+        u32 block_ptr;
+        Type type;
+        match (type) {
+            (Type::LZ_MIDI): block_lz_midi block @ block_ptr;
+            (_): u32 block_placeholder @ block_ptr;
+        }
+    } catch {
+        padding[4]; //u32 block_ptr_INVALID;
+        Type type;
     }
+    u32 delta_x2; // block_len_x2
 };
 
 struct Rom_3D_bin {
