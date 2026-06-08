@@ -14,9 +14,9 @@ enum Filetype : u8 {
     UNK_00      = 0x00,
     BMD0        = 0x01, // BMD0 (NSBMD) file; LZ compression
     UNK_02      = 0x02,
-    UNK_03      = 0x03,
+    BCA0        = 0x03, // BCA (Nitro joint animation) file (?)
     UNK_04      = 0x04,
-    UNK_05      = 0x05,
+    SBNK        = 0x05, // SBNK file (?)
     MIDI        = 0x06, // MIDI file; LZ compression
 };
 
@@ -26,6 +26,17 @@ bitfield FileAttributes {
     unk_flags_2 : 8;
     unk_flags_3 : 8;
     unk_flags_4 : 8;
+};
+
+struct file_unk00 {
+    try {
+        if (parent.metadata_size > 0) {
+            u8 metadata[parent.metadata_size];
+            $ = $ - parent.metadata_size;
+        }
+    } catch { }
+    u32 magic; // 01 01 01 01
+    /* TODO */
 };
 
 // corresponding to Filetype::BMD0
@@ -44,6 +55,64 @@ struct file_bmd0 {
     padding[1];
     char magic[4];
     // etc.
+};
+
+struct file_unk02 {
+    try {
+        if (parent.metadata_size > 0) {
+            u8 metadata[parent.metadata_size];
+            $ = $ - parent.metadata_size;
+        }
+    } catch { }
+    //metadata ?
+    u32 metadata_hash_count;
+    Hex<u32> metadata_hashes[metadata_hash_count];
+    u8 metadata_hash_order[metadata_hash_count];
+    // pad to 32-bit alignment
+    if ($ % 4 != 0)
+        padding[4 - ($ % 4)];
+    /* TODO */
+};
+
+struct file_bca0 {
+    try {
+        if (parent.metadata_size > 0) {
+            u8 metadata[parent.metadata_size];
+            $ = $ - parent.metadata_size;
+        }
+    } catch { }
+    // metadata ?
+    u32 metadata_hash_count;
+    Hex<u32> metadata_hashes[metadata_hash_count];
+    u8 metadata_hash_order[metadata_hash_count];
+    // pad to 32-bit alignment
+    if ($ % 4 != 0)
+        padding[4 - ($ % 4)];
+    /* TODO */
+};
+
+struct file_unk04 {
+    try {
+        if (parent.metadata_size > 0) {
+            u8 metadata[parent.metadata_size];
+            $ = $ - parent.metadata_size;
+        }
+    } catch { }
+    //metadata ?
+    u32 metadata_var1_count;
+    Hex<u32> var1[metadata_var1_count];
+    /* TODO */
+};
+
+struct file_sbnk {
+    try {
+        if (parent.metadata_size > 0) {
+            u8 metadata[parent.metadata_size];
+            $ = $ - parent.metadata_size;
+        }
+    } catch { }
+    u32 placeholder;
+    /* TODO */
 };
 
 // corresponding to Filetype::MIDI
@@ -95,7 +164,12 @@ struct _file {
     
     u32 start_pos = $;
     match (parent.file_table[_i].attributes.filetype) {
+        (Filetype::UNK_00): file_unk00 unk00;
         (Filetype::BMD0): file_bmd0 bmd0;
+        (Filetype::UNK_02): file_unk02 unk02;
+        (Filetype::BCA0): file_bca0 bca0;
+        (Filetype::UNK_04): file_unk04 unk04;
+        (Filetype::SBNK): file_sbnk sbnk;
         (Filetype::MIDI): file_midi midi;
         (_): u32 placeholder;
     }
