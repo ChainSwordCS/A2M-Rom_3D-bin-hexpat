@@ -7,18 +7,34 @@ import std.string;
 
 #pragma endian little
 
-enum Type : u32 {
+enum Filetype : u8 {
     // TODO
-    UNK_0       = 0x00000000,
-    LZ_MIDI     = 0x00000006, // MIDI file with LZ compression applied
-    UNK_4       = 0x00000004,
-    UNK_515     = 0x00000203, // d.515
-    UNK_1026    = 0x00000402, // d.1026
-    UNK_50000305= 0x50000305,
+    UNK_00      = 0x00,
+    BMD0        = 0x01, // BMD0 (NSBMD) file (with metadata?); LZ compression
+    UNK_02      = 0x02,
+    UNK_03      = 0x03,
+    UNK_04      = 0x04,
+    UNK_05      = 0x05,
+    MIDI        = 0x06, // MIDI file; LZ compression
 };
 
-// corresponding to TYPE::LZ_MIDI
-struct block_lz_midi {
+bitfield FileAttributes {
+    Filetype filetype : 7;
+    unk_flags_1 : 1;
+    unk_flags_2 : 8;
+    unk_flags_3 : 8;
+    unk_flags_4 : 8;
+};
+
+// corresponding to Filetype::BMD0
+struct file_bmd0 {
+    // TODO
+    u32 var1;
+};
+
+// corresponding to Filetype::MIDI
+struct file_midi {
+    // TODO
     u32 decompressed_length;
 };
 
@@ -26,15 +42,16 @@ struct block_lz_midi {
 struct file_table {
     u32 hash; // probably hash ?
     try {
-        u32 block_ptr;
-        Type type;
-        match (type) {
-            (Type::LZ_MIDI): block_lz_midi block @ block_ptr;
-            (_): u32 block_placeholder @ block_ptr;
+        u32 ptr;
+        FileAttributes attributes;
+        match (attributes.filetype) {
+            (Filetype::BMD0): file_bmd0 file_bmd0 @ ptr;
+            (Filetype::MIDI): file_midi file_midi @ ptr;
+            (_): u32 file_placeholder @ ptr;
         }
     } catch {
         padding[4]; //u32 block_ptr_INVALID;
-        Type type;
+        FileAttributes attributes;
     }
     u32 delta; // block_len_x2
 };
@@ -76,7 +93,7 @@ fn identify_BMD0_files(file_table file_table, u32 count) {
 struct Rom_3D_bin {
     u32 file_count;
     file_table file_table[file_count];
-    identify_BMD0_files(file_table, file_count);
+    //identify_BMD0_files(file_table, file_count);
 };
 
 Rom_3D_bin Rom_3D_bin @ 0x00;
