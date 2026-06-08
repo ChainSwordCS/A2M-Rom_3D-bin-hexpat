@@ -71,7 +71,11 @@ struct file_unk02 {
     // pad to 32-bit alignment
     if ($ % 4 != 0)
         padding[4 - ($ % 4)];
-    /* TODO */
+    u32 metadata_decompressed_length;
+    // the remainder appears to be an LZ compressed archive.
+    // we're not gonna bother decompressing that here...
+    u8 LZ_header[4];
+    // etc.
 };
 
 struct file_bca0 {
