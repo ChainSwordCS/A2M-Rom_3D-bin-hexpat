@@ -39,7 +39,7 @@ struct file_midi {
 };
 
 // one entry in the file table/list
-struct file_table {
+struct file_table_entry {
     u32 hash; // probably hash ?
     try {
         u32 ptr;
@@ -92,7 +92,7 @@ fn identify_BMD0_files(file_table file_table, u32 count) {
 
 struct Rom_3D_bin {
     u32 file_count;
-    file_table file_table[file_count];
+    file_table_entry file_table[file_count];
     //identify_BMD0_files(file_table, file_count);
 };
 
