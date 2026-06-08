@@ -12,7 +12,7 @@ using Hex<T> = type::Hex<T>;
 enum Filetype : u8 {
     // TODO
     UNK_00      = 0x00,
-    BMD0        = 0x01, // BMD0 (NSBMD) file (with metadata?); LZ compression
+    BMD0        = 0x01, // BMD0 (NSBMD) file; LZ compression
     UNK_02      = 0x02,
     UNK_03      = 0x03,
     UNK_04      = 0x04,
@@ -30,14 +30,31 @@ bitfield FileAttributes {
 
 // corresponding to Filetype::BMD0
 struct file_bmd0 {
-    // TODO
-    u32 var1;
+    // metadata
+    u32 metadata_model_count;
+    Hex<u32> metadata_model_hashes[metadata_model_count];
+    u8 metadata_model_hash_order[metadata_model_count];
+    // pad to 32-bit alignment
+    if ($ % 4 != 0)
+        padding[4 - ($ % 4)];
+    u32 metadata_decompressed_length;
+    // the remainder is an LZ compressed archive.
+    // we're not gonna bother decompressing that here...
+    u8 LZ_header[4];
+    padding[1];
+    char magic[4];
+    // etc.
 };
 
 // corresponding to Filetype::MIDI
 struct file_midi {
-    // TODO
-    u32 decompressed_length;
+    u32 metadata_decompressed_length;
+    // the remainder is an LZ compressed archive.
+    // we're not gonna bother decompressing that here...
+    u8 LZ_header[4];
+    padding[1];
+    char magic[4];
+    // etc.
 };
 
 // one entry in the file table/list
