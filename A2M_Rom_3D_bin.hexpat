@@ -41,19 +41,55 @@ struct file_midi {
 // one entry in the file table/list
 struct file_table_entry {
     u32 hash; // probably hash ?
-    try {
-        u32 ptr;
-        FileAttributes attributes;
-        match (attributes.filetype) {
-            (Filetype::BMD0): file_bmd0 file_bmd0 @ ptr;
-            (Filetype::MIDI): file_midi file_midi @ ptr;
-            (_): u32 file_placeholder @ ptr;
-        }
-    } catch {
-        padding[4]; //u32 block_ptr_INVALID;
-        FileAttributes attributes;
-    }
+    u32 ptr;
+    if (ptr < std::mem::size()-1)
+        u8 PLACEHOLDER_file_marker @ ptr;
+    FileAttributes attributes;
     u32 delta; // block_len_x2
+};
+
+/** globals are necessary for the way we're doing this here.
+ *  (sorry for bad code.)
+ *  
+ *  there are less roundabout ways to do this, but i don't want the file
+ *  stuck in the file_table_entry struct, defined at a distant offset
+ *  from the main data in said struct. because in that case, if you click
+ *  on the bytes in the Hex Editor view, it won't highlight the whole
+ *  file_table_entry struct in the Pattern Data view, which sucks.
+ */
+u32 _i = 0; // global
+/** not designed to be used by other code using this hexpat as a library, sorry. */
+struct _file {
+    // calculate file size intelligently
+    u32 total_size = 0;
+    if (_i < parent.file_count - 1) {
+        total_size = parent.file_table[_i+1].ptr - parent.file_table[_i].ptr;
+    } else {
+        total_size = std::mem::size() - parent.file_table[_i].ptr;
+    }
+    
+    // calculate size of metadata
+    u32 metadata_size = total_size - (parent.file_table[_i].delta / 2);
+    if (metadata_size < 0) { // bad data
+        metadata_size = 0;
+    }
+    
+    u32 start_pos = $;
+    match (parent.file_table[_i].attributes.filetype) {
+        (Filetype::BMD0): file_bmd0 bmd0;
+        (Filetype::MIDI): file_midi midi;
+        (_): u32 placeholder;
+    }
+    if ($ < start_pos+total_size) {
+        padding[(start_pos+total_size)-$];
+    } else if ($ > start_pos+total_size) {
+        std::print("Warning: file of type "+std::string::to_string(parent.file_table[_i].attributes.filetype)
+            +" at position "+std::string::to_string(start_pos)+" is too long. (Code logic bug?)");
+        $ = start_pos+total_size;
+    }
+    
+    
+    _i = _i + 1;
 };
 
 /** for research and debugging.
@@ -93,6 +129,14 @@ fn identify_BMD0_files(file_table_entry file_table, u32 count) {
 struct Rom_3D_bin {
     u32 file_count;
     file_table_entry file_table[file_count];
+    
+    if ($ < file_table[0].ptr) {
+        padding[file_table[0].ptr - $];
+    }
+    _i = 0; // global
+    /* if ImHex is crashing, try commenting-out the line below */
+    _file files[file_count];
+    
     //identify_BMD0_files(file_table, file_count);
 };
 
