@@ -4,6 +4,8 @@
 import std.io; // not needed?
 import std.mem;
 import std.string;
+import type.base;
+using Hex<T> = type::Hex<T>;
 
 #pragma endian little
 
@@ -40,8 +42,8 @@ struct file_midi {
 
 // one entry in the file table/list
 struct file_table_entry {
-    u32 hash; // probably hash ?
-    u32 ptr;
+    Hex<u32> hash; // probably hash ?
+    Hex<u32> ptr;
     if (ptr < std::mem::size()-1)
         u8 PLACEHOLDER_file_marker @ ptr;
     FileAttributes attributes;
