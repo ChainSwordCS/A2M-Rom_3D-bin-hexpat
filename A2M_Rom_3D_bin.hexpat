@@ -95,14 +95,11 @@ struct _file {
 };
 
 /** for research and debugging.
- *  at the end of this function, the cursor returns to the position where it was.
  */
 fn identify_BMD0_files(file_table_entry file_table, u32 count) {
-    u32 file_cursor_stored_position = $;
     for (u32 i = 0, i < count, i = i + 1) {
         try {
             u32 ptr = file_table[i].ptr;
-            //$ = ptr;
             u32 entries = std::mem::read_unsigned(ptr, 4);
             ptr = ptr + (entries * 4) + entries + 4;
             
@@ -117,14 +114,13 @@ fn identify_BMD0_files(file_table_entry file_table, u32 count) {
             if (std::string::contains(std::mem::read_string(ptr,4), "BMD0")) {
                 std::print("file="+std::string::to_string(i));
                 //std::print("type="+std::format("%X8", u32(file_table[i].type)));
-                std::print("type="+std::string::to_string(u32(file_table[i].attributes.filetype)));
+                std::print("type="+std::string::to_string(u32(file_table[i].attributes)));
                 std::print(std::mem::read_string(ptr,4));
             }
         } catch {
             continue;
         }
     }
-    $ = file_cursor_stored_position;
     return;
 };
 
