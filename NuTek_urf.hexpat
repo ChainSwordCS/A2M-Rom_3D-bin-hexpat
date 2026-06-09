@@ -1,42 +1,43 @@
-// .urf 
+// NuTek engine URFAT file (.urf)
 
 #pragma endian little
 
-const char CONST_MAGIC_KTUN[4] = {'K','T','U','N'}; // NUTK ?
-const char CONST_MAGIC_RFMN[4] = {'R','F','M','N'}; // NMFR ?
-const char CONST_MAGIC_COLN[4] = {'C','O','L','N'}; // NLOC ?
-const char CONST_MAGIC_TAFN[4] = {'T','A','F','N'}; // NFAT ?
+const char CONST_MAGIC_NUTK[4] = {'K','T','U','N'}; // NUTK; URFAT file
+const char CONST_MAGIC_NMFR[4] = {'R','F','M','N'}; // NMFR; Master FAT Record
+const char CONST_MAGIC_NLOC[4] = {'C','O','L','N'}; // NLOC; Localisation Information
+const char CONST_MAGIC_NFAT[4] = {'T','A','F','N'}; // NFAT; File Attribute Table
+const char CONST_MAGIC_MD[2] = {'D','M'}; // MD; Metadata
 
-struct RFMN_struct {
+struct NMFR_struct {
     u32 var1;
     u32 var2;
     u32 var3;
 };
 
-struct COLN_struct_B {
-    char TAFN_magic[4];
+struct NLOC_struct_B {
+    char NFAT_magic[4];
     u32 var1;
     u32 var2;
     u32 var3;
 };
 
-struct COLN_struct_A {
+struct NLOC_struct_A {
     u32 var1;
     u32 ptr;
-    COLN_struct_B @ ptr;
+    NLOC_struct_B @ ptr;
 };
 
 struct urf_file {
-    char magic_KTUN[4];
+    char magic_NUTK[4];
     u32 unk1;
     u32 unk2;
-    char magic_RFMN[4];
+    char magic_NMFR[4];
     u32 unk3;
-    u32 RFMN_list_count;
-    RFMN_struct RFMN_struct[RFMN_list_count];
-    char magic_COLN[4];
-    u32 COLN_list_count;
-    COLN_struct_A COLN_struct_A[COLN_list_count];
+    u32 NMFR_list_count;
+    NMFR_struct NMFR_struct[NMFR_list_count];
+    char magic_NLOC[4];
+    u32 NLOC_list_count;
+    NLOC_struct_A NLOC_struct_A[NLOC_list_count];
 };
 
 urf_file urf_file @ 0x00;
