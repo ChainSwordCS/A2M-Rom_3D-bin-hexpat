@@ -1,4 +1,6 @@
-// DJTS; Rom_3D.bin
+// A2M NuTek engine (for Nintendo DS) - Rom_3D.bin parser
+// Copyright (c) 2026 ChainSwordCS
+// open-source license: MIT
 
 //import std.core;
 import std.io; // not needed?

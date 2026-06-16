@@ -1,4 +1,8 @@
-// NuTek engine URFAT file (.urf)
+// A2M NuTek engine (for Nintendo DS) - URFAT (.urf) file parser
+// Copyright (c) 2026 ChainSwordCS
+// open-source license: MIT
+
+// VERY unfinished
 
 #pragma endian little
 
