@@ -31,13 +31,14 @@ fn determine_str_len(u8 c) {
 
 struct string_struct {
     if (!std::mem::eof()) {
-        padding[6]; //char var[determine_str_len(0x00)];
-        char s[determine_str_len('\n')];
+        Hex<u32> hash_id;
+        u16 str_len;
+        char s[str_len]; //char s[determine_str_len('\n')];
     }
 };
 
 struct list_entry {
-    u32 var1; // hash?
+    u32 hash_id; // hash?
     Hex<u16> ptr; // u32?
     padding[2];
 };
