@@ -110,13 +110,23 @@ struct file_unk04 {
     /* TODO */
 };
 
-struct file_sbnk {
-    try {
-        if (parent.metadata_size > 0) {
-            u8 metadata[parent.metadata_size];
-            $ = $ - parent.metadata_size;
-        }
-    } catch { }
+struct file_sbnkswar_metadata {
+    u32 offs = $;
+    //u8 metadata[parent.metadata_size];
+    u32 count;
+    u32 hash_list[count]; // ?
+    u64 unk[count];
+    
+    if ($ < offs + parent.metadata_size) {
+        padding[(offs+parent.metadata_size)-$];
+    }
+};
+struct file_sbnkswar {
+    if (parent.metadata_size > 0) {
+        u32 metadata_size = parent.metadata_size;
+        file_sbnkswar_metadata metadata;
+    }
+    
     u32 placeholder;
     /* TODO */
 };
@@ -175,7 +185,7 @@ struct _file {
         (Filetype::UNK_02): file_unk02 unk02;
         (Filetype::BCA0): file_bca0 bca0;
         (Filetype::UNK_04): file_unk04 unk04;
-        (Filetype::SBNK): file_sbnk sbnk;
+        (Filetype::SBNK): file_sbnkswar sbnkswar;
         (Filetype::MIDI): file_midi midi;
         (_): u32 placeholder;
     }
