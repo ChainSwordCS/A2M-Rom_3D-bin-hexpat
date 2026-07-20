@@ -123,13 +123,24 @@ struct file_sbnkswar_metadata {
     }
 };
 struct file_sbnkswar {
+    u32 offs = $;
     if (parent.metadata_size > 0) {
         u32 metadata_size = parent.metadata_size;
         file_sbnkswar_metadata metadata;
     }
-    
-    u32 placeholder;
-    /* TODO */
+    if ($ == offs+metadata_size-4) {
+        // probably lz compressed, seems like?
+        u32 placeholder_lzss;
+        /* i'm not implementing an lz decompression routine in ImHex are you crazy */
+    } else {
+        u32 offs2 = $;
+        u32 sound_file_count;
+        Hex<u32> sound_file_ptrs[sound_file_count];
+        if (sound_file_count >= 1)
+            u32 sound_file_placeholder_0 @ (offs2 + sound_file_ptrs[0]);
+        if (sound_file_count >= 2)
+            u32 sound_file_placeholder_1 @ (offs2 + sound_file_ptrs[1]);
+    }
 };
 
 // corresponding to Filetype::MIDI
