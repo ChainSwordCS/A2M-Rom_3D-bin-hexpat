@@ -97,17 +97,30 @@ struct file_bca0 {
     /* TODO */
 };
 
+struct unk04_entry {
+    u32 type;
+    u32 refA;
+    u32 refB;
+    u32 aux;
+};
+struct unk04_record {
+    u32 key;
+    u32 entry_cnt;
+    u32 var3[entry_cnt];
+    unk04_entry entry[entry_cnt];
+};
 struct file_unk04 {
     try {
         if (parent.metadata_size > 0) {
             u8 metadata[parent.metadata_size];
-            $ = $ - parent.metadata_size;
+            //$ = $ - parent.metadata_size;
         }
     } catch { }
-    //metadata ?
-    u32 metadata_var1_count;
-    Hex<u32> var1[metadata_var1_count];
-    /* TODO */
+    u32 base_offset = $;
+    u32 n;
+    //unk04_struct1 struct1[n];
+    u32 offsets[n];
+    unk04_record records[n];
 };
 
 struct file_sbnkswar_metadata {
