@@ -117,8 +117,9 @@ struct file_sbnkswar_metadata {
     u32 hash_list[count]; // ?
     u64 unk[count];
     
-    if ($ < offs + parent.metadata_size) {
-        padding[(offs+parent.metadata_size)-$];
+    // pad to nearest 32-byte boundary
+    if($ % 32 > 0) {
+        padding[32 - ($ % 32)];
     }
 };
 struct file_sbnkswar {
