@@ -19,16 +19,16 @@ struct chunk_generic {
 };
 
 u32 _g_remaining_len = 0;
-struct XOBC_36byte {
+struct CBOX_dat_36byte {
     u8 d[36];
     _g_remaining_len -= 36;
 };
-struct chunk_XOBC {
+struct chunk_CBOX {
     char magic[4];
     u32 length;
     u32 offs = $;
     _g_remaining_len = length;
-    XOBC_36byte data[while(_g_remaining_len >= 36)];
+    CBOX_dat_36byte data[while(_g_remaining_len >= 36)];
     //if ($ < offs+length) {
     if (_g_remaining_len > 0) {
         //u8 data2[offs+length-$];
@@ -44,11 +44,14 @@ struct chunk {
     (0x48444F43): /* CMDH */ chunk_generic chunk;
     (0x46444D43): /* CMDF */ chunk_generic chunk;
     /* data */
-    (0x56455253): /* SREV */ chunk_generic chunk;
-    (0x43424F58): /* XOBC */ chunk_XOBC chunk;
-    (0x434D4154): /* TAMC */ chunk_generic chunk;
-    (0x43434150): /* PACC */ chunk_generic chunk;
-    (0x43535048): /* HPSC */ chunk_generic chunk;
+    (0x43424F58): /* CBOX / XOBC */ chunk_CBOX chunk;
+    (0x43434150): /* CCAP / PACC */ chunk_generic chunk;
+    (0x434D4154): /* CMAT / TAMC */ chunk_generic chunk;
+    (0x43514144): /* CQAD / DAQC */ chunk_generic chunk;
+    (0x43535048): /* CSPH / HPSC */ chunk_generic chunk;
+    (0x43535350): /* CSSP / PSSC */ chunk_generic chunk; // ?
+    (0x43545249): /* CTRI / IRTC */ chunk_generic chunk;
+    (0x56455253): /* VERS / SREV */ chunk_generic chunk;
     (_): chunk_generic chunk;
     }
 };
