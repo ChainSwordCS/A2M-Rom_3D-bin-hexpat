@@ -18,7 +18,7 @@ enum Filetype : u8 {
     UNK_02      = 0x02,
     BCA0        = 0x03, // BCA (Nitro joint animation) file (?)
     UNK_04      = 0x04,
-    SBNK        = 0x05, // SBNK file (?)
+    SNDARC      = 0x05, // sound file container (.bin/.bin.lz) - contains SBNK file and SWAR file
     MIDI        = 0x06, // MIDI file; LZ compression
 };
 
@@ -30,19 +30,29 @@ bitfield FileAttributes {
     unk_flags_4 : 8;
 };
 
+
+
+/** corresponding to Filetype::UNK_00
+ *  
+ *  if using this, defining (u32) parent.metadata_size is recommended but not required.
+ */
 struct file_unk00 {
+    // not known to have any leading metadata, IIRC.
     try {
         if (parent.metadata_size > 0) {
-            u8 metadata[parent.metadata_size];
-            $ = $ - parent.metadata_size;
+            u8 leading_metadata_section[parent.metadata_size] [[sealed]];
+            //$ = $ - parent.metadata_size;
         }
-    } catch { }
+    } catch {}
     u32 magic; // 01 01 01 01
     /* TODO */
 };
 
-// corresponding to Filetype::BMD0
-struct file_bmd0 {
+
+
+/** substruct of struct file_bmd0
+ */
+struct file_bmd0_leading_metadata {
     // metadata
     u32 metadata_model_count;
     Hex<u32> metadata_model_hashes[metadata_model_count];
@@ -50,7 +60,21 @@ struct file_bmd0 {
     // pad to 32-bit alignment
     if ($ % 4 != 0)
         padding[4 - ($ % 4)];
-    u32 metadata_decompressed_length;
+};
+/** corresponding to Filetype::BMD0
+ *  
+ *  if using this, defining (u32) parent.metadata_size is recommended but not required.
+ */
+struct file_bmd0 {
+    try {
+        if (parent.metadata_size > 0) {
+            u8 leading_metadata_section[parent.metadata_size] [[sealed]];
+            $ = $ - parent.metadata_size;
+        }
+    } catch {}
+    file_bmd0_leading_metadata leading_metadata;
+    
+    u32 leading_metadata_LZ_decompressed_length;
     // the remainder is an LZ compressed archive.
     // we're not gonna bother decompressing that here...
     u8 LZ_header[4];
@@ -59,63 +83,96 @@ struct file_bmd0 {
     // etc.
 };
 
-struct file_unk02 {
-    try {
-        if (parent.metadata_size > 0) {
-            u8 metadata[parent.metadata_size];
-            $ = $ - parent.metadata_size;
-        }
-    } catch { }
-    //metadata ?
+
+
+/** substruct of struct file_unk02
+ */
+struct file_unk02_leading_metadata {
     u32 metadata_hash_count;
     Hex<u32> metadata_hashes[metadata_hash_count];
     u8 metadata_hash_order[metadata_hash_count];
     // pad to 32-bit alignment
     if ($ % 4 != 0)
         padding[4 - ($ % 4)];
-    u32 metadata_decompressed_length;
+};
+/** corresponding to Filetype::UNK_02
+ *  
+ *  if using this, defining (u32) parent.metadata_size is recommended but not required.
+ */
+struct file_unk02 {
+    try {
+        if (parent.metadata_size > 0) {
+            u8 leading_metadata_section[parent.metadata_size] [[sealed]];
+            $ = $ - parent.metadata_size;
+        }
+    } catch {}
+    file_unk02_leading_metadata leading_metadata;
+    
+    u32 leading_metadata_LZ_decompressed_length;
     // the remainder appears to be an LZ compressed archive.
     // we're not gonna bother decompressing that here...
     u8 LZ_header[4];
     // etc.
 };
 
-struct file_bca0 {
-    try {
-        if (parent.metadata_size > 0) {
-            u8 metadata[parent.metadata_size];
-            $ = $ - parent.metadata_size;
-        }
-    } catch { }
-    // metadata ?
+
+
+/** substruct of struct file_bca0
+ */
+struct file_bca0_leading_metadata {
     u32 metadata_hash_count;
     Hex<u32> metadata_hashes[metadata_hash_count];
     u8 metadata_hash_order[metadata_hash_count];
     // pad to 32-bit alignment
     if ($ % 4 != 0)
         padding[4 - ($ % 4)];
+};
+/** corresponding to Filetype::BCA0
+ *  
+ *  if using this, defining (u32) parent.metadata_size is recommended but not required.
+ */
+struct file_bca0 {
+    try {
+        if (parent.metadata_size > 0) {
+            u8 leading_metadata_section[parent.metadata_size] [[sealed]];
+            $ = $ - parent.metadata_size;
+        }
+    } catch {}
+    file_bca0_leading_metadata leading_metadata;
+    
     /* TODO */
 };
 
+
+
+/** substruct of struct file_unk04
+ */
 struct unk04_entry {
     u32 type;
     u32 refA;
     u32 refB;
     u32 aux;
 };
+/** substruct of struct file_unk04
+ */
 struct unk04_record {
     u32 key;
     u32 entry_cnt;
     u32 var3[entry_cnt];
     unk04_entry entry[entry_cnt];
 };
+/** corresponding to Filetype::UNK_04
+ *  
+ *  if using this, defining (u32) parent.metadata_size is recommended but not required.
+ */
 struct file_unk04 {
     try {
         if (parent.metadata_size > 0) {
-            u8 metadata[parent.metadata_size];
+            u8 leading_metadata_section[parent.metadata_size] [[sealed]];
             //$ = $ - parent.metadata_size;
         }
-    } catch { }
+    } catch {}
+    
     u32 base_offset = $;
     u32 n;
     //unk04_struct1 struct1[n];
@@ -123,42 +180,85 @@ struct file_unk04 {
     unk04_record records[n];
 };
 
-struct file_sbnkswar_metadata {
+
+
+/** substruct of struct file_sbnkswar
+ */
+struct file_sbnkswar_leading_metadata {
     u32 offs = $;
-    //u8 metadata[parent.metadata_size];
     u32 count;
-    u32 hash_list[count]; // ?
-    u64 unk[count];
+    u32 unk_list_1[count]; // hash list, maybe?
+    u64 unk_list_2[count];
     
     // pad to nearest 32-byte boundary
     if($ % 32 > 0) {
         padding[32 - ($ % 32)];
     }
 };
+/** corresponding to Filetype::SNDARC
+ *  
+ *  if using this, defining (u32) parent.metadata_size is recommended but not required.
+ */
 struct file_sbnkswar {
     u32 offs = $;
-    if (parent.metadata_size > 0) {
-        u32 metadata_size = parent.metadata_size;
-        file_sbnkswar_metadata metadata;
+    try {
+        if (parent.metadata_size > 0) {
+            u8 leading_metadata_section[parent.metadata_size] [[sealed]];
+            $ = $ - parent.metadata_size;
+        }
+    } catch {}
+    file_sbnkswar_leading_metadata leading_metadata;
+    
+    /*  code infrastructure thing;
+        this is for the "smart" detection of whether the file is lz compressed,
+        as i want to not require the parent struct to define metadata_size...
+        like, i want these filetype structs to work fine without that,
+        (or at least not raise an exception...)
+        partly cuz there's no need for it to be a hard requirement anyway.
+     */
+    bool is_parent_metadata_size_defined = true;
+    u32 metadata_size = 0;
+    try {
+        metadata_size = parent.metadata_size;
+        is_parent_metadata_size_defined = true;
+    } catch {
+        is_parent_metadata_size_defined = false;
     }
-    if ($ == offs+metadata_size-4) {
-        // probably lz compressed, seems like?
-        u32 placeholder_lzss;
-        /* i'm not implementing an lz decompression routine in ImHex are you crazy */
+    if (is_parent_metadata_size_defined) {
+        if ($ == offs+metadata_size-4) {
+            // probably lz compressed, seems like?
+            // i'm not implementing an lz decompression routine in ImHex are you crazy
+            u32 leading_metadata_LZ_decompressed_length;
+            u8 LZ_header[4];
+        } else {
+            u32 offs2 = $;
+            u32 sound_file_count;
+            Hex<u32> sound_file_ptrs[sound_file_count];
+            if (sound_file_count >= 1)
+                u32 sound_file_placeholder_0 @ (offs2 + sound_file_ptrs[0]);
+            if (sound_file_count >= 2)
+                u32 sound_file_placeholder_1 @ (offs2 + sound_file_ptrs[1]);
+        }
     } else {
-        u32 offs2 = $;
-        u32 sound_file_count;
-        Hex<u32> sound_file_ptrs[sound_file_count];
-        if (sound_file_count >= 1)
-            u32 sound_file_placeholder_0 @ (offs2 + sound_file_ptrs[0]);
-        if (sound_file_count >= 2)
-            u32 sound_file_placeholder_1 @ (offs2 + sound_file_ptrs[1]);
+        u32 placeholder;
     }
 };
 
-// corresponding to Filetype::MIDI
+
+
+/** corresponding to Filetype::MIDI
+ *  
+ *  if using this, defining (u32) parent.metadata_size is recommended but not required.
+ */
 struct file_midi {
-    u32 metadata_decompressed_length;
+    try {
+        if (parent.metadata_size > 0) {
+            u8 leading_metadata_section[parent.metadata_size] [[sealed]];
+            $ = $ - parent.metadata_size;
+        }
+    } catch {}
+    
+    u32 leading_metadata_LZ_decompressed_length;
     // the remainder is an LZ compressed archive.
     // we're not gonna bother decompressing that here...
     u8 LZ_header[4];
@@ -166,6 +266,8 @@ struct file_midi {
     char magic[4];
     // etc.
 };
+
+
 
 // one entry in the file table/list
 struct file_table_entry {
@@ -176,6 +278,8 @@ struct file_table_entry {
     FileAttributes attributes;
     u32 delta; // block_len_x2
 };
+
+
 
 /** globals are necessary for the way we're doing this here.
  *  (sorry for bad code.)
@@ -210,7 +314,7 @@ struct _file {
         (Filetype::UNK_02): file_unk02 unk02;
         (Filetype::BCA0): file_bca0 bca0;
         (Filetype::UNK_04): file_unk04 unk04;
-        (Filetype::SBNK): file_sbnkswar sbnkswar;
+        (Filetype::SNDARC): file_sbnkswar sbnkswar;
         (Filetype::MIDI): file_midi midi;
         (_): u32 placeholder;
     }
