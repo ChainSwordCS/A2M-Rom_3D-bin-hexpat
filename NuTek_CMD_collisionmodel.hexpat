@@ -20,12 +20,18 @@ struct chunk_generic {
 
 u32 _g_remaining_len = 0;
 struct CBOX_dat_36byte {
-    u8 d[36];
+    u8; // placeholder marker
+    padding[3];
+    s16 s16_set_1[3];
+    padding[18];
+    s16 s16_set_2[3];
+    s16; // unknown purpose
     _g_remaining_len -= 36;
 };
 struct chunk_CBOX {
     char magic[4];
     u32 length;
+    padding[4]; //u32 unk;
     u32 offs = $;
     _g_remaining_len = length;
     CBOX_dat_36byte data[while(_g_remaining_len >= 36)];
@@ -35,7 +41,6 @@ struct chunk_CBOX {
         u8 data2[_g_remaining_len];
         _g_remaining_len = 0;
     }
-    u32 footer;
 };
 
 struct chunk {
